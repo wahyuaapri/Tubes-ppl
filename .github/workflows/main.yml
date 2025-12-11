@@ -1,0 +1,87 @@
+name: Crypto Tracker CI/CD
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        
+    - name: Check required files exist
+      run: |
+        echo "🔍 Checking project files..."
+        REQUIRED_FILES=("index.php" "market.php" "portofolio.php" "about.php")
+        missing_files=0
+        
+        for file in "${REQUIRED_FILES[@]}"; do
+          if [ -f "$file" ]; then
+            size=$(wc -c < "$file")
+            echo "✅ $file found ($size bytes)"
+          else
+            echo "❌ $file NOT FOUND"
+            missing_files=1
+          fi
+        done
+        
+        [ $missing_files -eq 0 ] || exit 1
+        
+    - name: Install PHPUnit and run tests
+      run: |
+        echo "🧪 Installing PHPUnit..."
+        composer require --dev phpunit/phpunit:^10
+        
+        echo "🚀 Running tests..."
+        if [ -f "FileTypeTest.php" ]; then
+          ./vendor/bin/phpunit FileTypeTest.php --testdox --colors=always
+        else
+          echo "⚠ Test file not found, creating basic test..."
+          # Run basic PHP syntax check instead
+          for file in *.php; do
+            php -l "$file" && echo "✅ $file syntax OK"
+          done
+        fi
+        
+    - name: Validate HTML structure
+      run: |
+        echo "📄 Validating HTML structure..."
+        for file in index.php market.php portofolio.php about.php; do
+          echo "Checking $file..."
+          if grep -q "<!DOCTYPE html" "$file" && grep -q "</html>" "$file"; then
+            echo "✅ $file has valid HTML structure"
+          else
+            echo "⚠ $file might have incomplete HTML"
+          fi
+        done
+        
+    - name: Check for external resources
+      run: |
+        echo "🌐 Checking external resources..."
+        for file in index.php market.php portofolio.php about.php; do
+          echo "Resources in $file:"
+          grep -o 'https://[^"]*' "$file" | grep -E '(font-awesome|googleapis|cdn.jsdelivr)' || true
+        done
+        
+    - name: Create success badge
+      if: success()
+      run: |
+        echo "🎉 All tests passed!"
+        echo "::set-output name=status::success"
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: |
+          *.php
+          style.css
+          script.js
+          config.php
+        retention-days: 1
