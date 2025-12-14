@@ -422,7 +422,7 @@ require_once 'config.php';
             <div class="nav-links">
                 <a href="index.php" class="nav-link">Home</a>
                 <a href="market.php" class="nav-link">Market</a>
-                <a href="portfolio.php" class="nav-link">Portfolio Simulator</a>
+                <a href="portofolio.php" class="nav-link">Portfolio Simulator</a>
                 <a href="about.php" class="nav-link active">Tentang</a>
             </div>
             <div class="theme-toggle">
@@ -631,7 +631,7 @@ require_once 'config.php';
             <div class="footer-links">
                 <a href="index.php"><i class="fas fa-home"></i> Home</a>
                 <a href="market.php"><i class="fas fa-chart-line"></i> Market</a>
-                <a href="portfolio.php"><i class="fas fa-wallet"></i> Simulator</a>
+                <a href="portofolio.php"><i class="fas fa-wallet"></i> Simulator</a>
                 <a href="about.php"><i class="fas fa-info-circle"></i> Tentang</a>
                 <a href="#"><i class="fas fa-file-code"></i> Dokumentasi</a>
                 <a href="#"><i class="fas fa-envelope"></i> Kontak</a>
