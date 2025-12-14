@@ -1,10 +1,10 @@
 <?php
-include 'market.php'; // AMBIL DATA GLOBAL MARKET
+// include 'market.php'; // AMBIL DATA GLOBAL MARKET
 
-// Inisialisasi portfolio dari session jika belum ada
+// Inisialisasi portofolio dari session jika belum ada
 session_start();
-if (!isset($_SESSION['portfolio'])) {
-    $_SESSION['portfolio'] = [];
+if (!isset($_SESSION['portofolio'])) {
+    $_SESSION['portofolio'] = [];
 }
 
 // Fungsi untuk mendapatkan nama crypto berdasarkan ID
@@ -17,7 +17,7 @@ function getCryptoNameById($cryptoData, $coinId) {
     return null;
 }
 
-// Proses tambah ke portfolio
+// Proses tambah ke portofolio
 if (isset($_POST['add'])) {
     $coinId   = $_POST['coin_id'];
     $amount   = floatval($_POST['amount']);
@@ -41,8 +41,8 @@ if (isset($_POST['add'])) {
             $profitLoss = $totalValue - $buyValue;
             $profitLossPercent = ($buyValue > 0) ? ($profitLoss / $buyValue) * 100 : 0;
             
-            // Tambah ke portfolio
-            $_SESSION['portfolio'][] = [
+            // Tambah ke portofolio
+            $_SESSION['portofolio'][] = [
                 'id' => $coinId,
                 'name' => $coinName,
                 'symbol' => $symbol,
@@ -56,36 +56,36 @@ if (isset($_POST['add'])) {
                 'timestamp' => date('Y-m-d H:i:s')
             ];
             
-            $success = "Berhasil menambahkan {$coinName} ke portfolio!";
+            $success = "Berhasil menambahkan {$coinName} ke portofolio!";
         } else {
             $error = "Koin tidak ditemukan!";
         }
     }
 }
 
-// Proses hapus dari portfolio
+// Proses hapus dari portofolio
 if (isset($_GET['delete'])) {
     $index = intval($_GET['delete']);
-    if (isset($_SESSION['portfolio'][$index])) {
-        $coinName = $_SESSION['portfolio'][$index]['name'];
-        unset($_SESSION['portfolio'][$index]);
-        $_SESSION['portfolio'] = array_values($_SESSION['portfolio']); // Re-index array
-        $success = "Berhasil menghapus {$coinName} dari portfolio!";
+    if (isset($_SESSION['portofolio'][$index])) {
+        $coinName = $_SESSION['portofolio'][$index]['name'];
+        unset($_SESSION['portofolio'][$index]);
+        $_SESSION['portofolio'] = array_values($_SESSION['portofolio']); // Re-index array
+        $success = "Berhasil menghapus {$coinName} dari portofolio!";
     }
 }
 
-// Proses clear semua portfolio
+// Proses clear semua portofolio
 if (isset($_POST['clear_all'])) {
-    $_SESSION['portfolio'] = [];
-    $success = "Semua portfolio telah dihapus!";
+    $_SESSION['portofolio'] = [];
+    $success = "Semua portofolio telah dihapus!";
 }
 
-// Hitung total portfolio
+// Hitung total portofolio
 $totalPortfolioValue = 0;
 $totalInvestment = 0;
 $totalProfitLoss = 0;
 
-foreach ($_SESSION['portfolio'] as $item) {
+foreach ($_SESSION['portofolio'] as $item) {
     $totalPortfolioValue += $item['total_value'];
     $totalInvestment += $item['buy_value'];
     $totalProfitLoss += $item['profit_loss'];
@@ -99,6 +99,7 @@ $totalProfitLossPercent = ($totalInvestment > 0) ? ($totalProfitLoss / $totalInv
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
     <title>Portfolio Simulator Crypto</title>
     <style>
         * {
@@ -289,6 +290,25 @@ $totalProfitLossPercent = ($totalInvestment > 0) ? ($totalProfitLoss / $totalInv
     </style>
 </head>
 <body>
+<header class="header">
+        <div class="container">
+            <nav class="navbar">
+                <div class="logo">
+                    <i class="fas fa-coins"></i>
+                    <span>Crypto<span class="logo-highlight">Tracker</span></span>
+                </div>
+                <div class="nav-links">
+                    <a href="index.php" class="nav-link">Home</a>
+                    <a href="market.php" class="nav-link">Market</a>
+                    <a href="portofolio.php" class="nav-link active">Portfolio Simulator</a>
+                    <a href="about.php" class="nav-link">Tentang</a>
+                </div>
+                <div class="theme-toggle">
+                    <i class="fas fa-moon" id="theme-icon"></i>
+                </div>
+            </nav>
+        </div>
+    </header>
     <div class="container">
         <?php if (isset($error)): ?>
             <div class="alert error"><?= htmlspecialchars($error) ?></div>
@@ -338,7 +358,7 @@ $totalProfitLossPercent = ($totalInvestment > 0) ? ($totalProfitLoss / $totalInv
         </div>
         
         <!-- Summary Portfolio -->
-        <?php if (!empty($_SESSION['portfolio'])): ?>
+        <?php if (!empty($_SESSION['portofolio'])): ?>
         <div class="summary">
             <div class="summary-item">
                 <div>Total Investasi</div>
@@ -359,7 +379,7 @@ $totalProfitLossPercent = ($totalInvestment > 0) ? ($totalProfitLoss / $totalInv
         <?php endif; ?>
         
         <!-- Tabel Portfolio -->
-        <?php if (empty($_SESSION['portfolio'])): ?>
+        <?php if (empty($_SESSION['portofolio'])): ?>
             <div class="alert info">
                 Portfolio kosong. Tambahkan crypto untuk memulai!
             </div>
@@ -381,7 +401,7 @@ $totalProfitLossPercent = ($totalInvestment > 0) ? ($totalProfitLoss / $totalInv
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($_SESSION['portfolio'] as $index => $p): 
+                    <?php foreach ($_SESSION['portofolio'] as $index => $p): 
                         // Update harga terkini dari market data
                         $coinData = getCryptoNameById($cryptoData, $p['id']);
                         if ($coinData) {
@@ -410,7 +430,7 @@ $totalProfitLossPercent = ($totalInvestment > 0) ? ($totalProfitLoss / $totalInv
                         </td>
                         <td>
                             <a href="?delete=<?= $index ?>" 
-                               onclick="return confirm('Hapus <?= htmlspecialchars($p['name']) ?> dari portfolio?')"
+                               onclick="return confirm('Hapus <?= htmlspecialchars($p['name']) ?> dari portofolio?')"
                                class="btn-danger" 
                                style="color: white; padding: 5px 10px; border-radius: 3px; text-decoration: none; font-size: 12px;">
                                 Hapus
@@ -422,7 +442,7 @@ $totalProfitLossPercent = ($totalInvestment > 0) ? ($totalProfitLoss / $totalInv
             </table>
             
             <div class="actions">
-                <form method="POST" onsubmit="return confirm('Hapus SEMUA portfolio?')">
+                <form method="POST" onsubmit="return confirm('Hapus SEMUA portofolio?')">
                     <button type="submit" name="clear_all" class="btn-danger">
                         🗑️ Hapus Semua Portfolio
                     </button>

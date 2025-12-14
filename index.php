@@ -27,7 +27,7 @@ $globalData = getCryptoData("/global");
                 <div class="nav-links">
                     <a href="index.php" class="nav-link">Home</a>
                     <a href="market.php" class="nav-link">Market</a>
-                    <a href="portfolio.php" class="nav-link">Portfolio Simulator</a>
+                    <a href="portofolio.php" class="nav-link">Portfolio Simulator</a>
                     <a href="about.php" class="nav-link">Tentang</a>
                 </div>
                 <div class="theme-toggle">
@@ -92,7 +92,7 @@ $globalData = getCryptoData("/global");
                     </div>
                     <h3>Portfolio Simulator</h3>
                     <p>Simulasikan investasi cryptocurrency dan hitung potensi keuntungan Anda.</p>
-                    <a href="portfolio.php" class="feature-link">Coba Simulator <i class="fas fa-arrow-right"></i></a>
+                    <a href="portofolio.php" class="feature-link">Coba Simulator <i class="fas fa-arrow-right"></i></a>
                 </div>
                 
                 <div class="feature-card">
@@ -173,7 +173,7 @@ $globalData = getCryptoData("/global");
                 <div class="footer-links">
                     <a href="index.php"><i class="fas fa-home"></i> Home</a>
                     <a href="market.php"><i class="fas fa-chart-line"></i> Market</a>
-                    <a href="portfolio.php"><i class="fas fa-calculator"></i> Simulator</a>
+                    <a href="portofolio.php"><i class="fas fa-calculator"></i> Simulator</a>
                     <a href="about.php"><i class="fas fa-info-circle"></i> Tentang</a>
                 </div>
                 <div class="footer-copyright">

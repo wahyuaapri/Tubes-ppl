@@ -253,7 +253,7 @@ $globalData = getCryptoData("/global");
                 <div class="nav-links">
                     <a href="index.php" class="nav-link">Home</a>
                     <a href="market.php" class="nav-link active">Market</a>
-                    <a href="portfolio.php" class="nav-link">Portfolio Simulator</a>
+                    <a href="portofolio.php" class="nav-link">Portfolio Simulator</a>
                     <a href="about.php" class="nav-link">Tentang</a>
                 </div>
                 <div class="theme-toggle">
