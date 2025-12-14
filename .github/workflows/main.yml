@@ -35,7 +35,7 @@ jobs:
     - name: Install PHPUnit and run tests
       run: |
         echo "🧪 Installing PHPUnit..."
-        composer require --dev phpunit/phpunit:^10
+        composer require --dev phpunit/phpunit:^11.5
         
         echo "🚀 Running tests..."
         if [ -f "FileTypeTest.php" ]; then
