@@ -10,125 +10,150 @@ class FileTypeTest extends TestCase
         'about.php'
     ];
 
-    // Validator 1: Cek semua file ada
-    public function test_all_required_files_exist()
+    // Validator 1: Cek semua file PHP ada
+    public function test_all_required_php_files_exist()
     {
+        $this->assertCount(4, $this->projectFiles, "Harus ada tepat 4 file PHP dalam proyek ini");
+        
         foreach ($this->projectFiles as $file) {
             $this->assertFileExists(
                 $file, 
                 "File wajib '$file' tidak ditemukan! File yang dibutuhkan: " . implode(', ', $this->projectFiles)
             );
         }
-        $this->assertCount(2, $this->projectFiles, "Harus ada tepat 2 file dalam proyek ini");
     }
 
-    // Validator 2: Cek semua file PHP memiliki kode PHP yang valid
-    public function test_all_php_files_have_valid_php_code()
+    // Validator 2: Cek semua file PHP memiliki sintaks yang valid
+    public function test_all_php_files_have_valid_syntax()
     {
-        foreach ($this->projectFiles as $file) {
-            if (pathinfo($file, PATHINFO_EXTENSION) === 'php') {
-                $content = file_get_contents($file);
-                
-                $this->assertStringContainsString(
-                    '<?php', 
-                    $content, 
-                    "File '$file' harus mengandung tag pembuka PHP (<?php)"
-                );
-                
-                // Cek tidak ada syntax error fatal
-                $this->assertDoesNotMatchRegularExpression(
-                    '/<\?=\s*[\'"]/',
-                    $content,
-                    "File '$file' mengandung syntax PHP yang mungkin bermasalah"
-                );
-            }
-        }
-    }
-
-    // Validator 3: Cek semua file memiliki struktur HTML yang baik
-    public function test_all_files_have_valid_html_structure()
-    {
-        $requiredTags = ['<html', '<head', '<body', '<div', '</html'];
-        $passedFiles = 0;
-        
         foreach ($this->projectFiles as $file) {
             $content = file_get_contents($file);
-            $hasAllTags = true;
             
-            foreach ($requiredTags as $tag) {
-                if (stripos($content, $tag) === false) {
-                    $hasAllTags = false;
-                    break;
-                }
-            }
+            // Cek tag pembuka PHP
+            $this->assertStringContainsString(
+                '<?php', 
+                $content, 
+                "File '$file' harus mengandung tag pembuka PHP (<?php)"
+            );
             
-            if ($hasAllTags) {
-                $passedFiles++;
-            }
-        }
-        
-        $this->assertGreaterThanOrEqual(
-            1, 
-            $passedFiles, 
-            "Minimal satu file harus memiliki struktur HTML lengkap (mengandung <html>, <head>, <body>, <div>, dan </html>)"
-        );
-    }
-
-    // Validator 4: Cek semua file memiliki CSS dan JavaScript yang diperlukan
-    public function test_all_files_have_required_resources()
-    {
-        $requiredResources = [
-            'style.css' => 'stylesheet',
-            'script.js' => 'script',
-            'font-awesome' => 'icon library',
-            'googleapis.com' => 'fonts'
-        ];
-        
-        foreach ($this->projectFiles as $file) {
-            $content = file_get_contents($file);
-            $foundResources = 0;
+            // Cek sintaks PHP dengan lint
+            $output = null;
+            $return_var = null;
+            exec("php -l $file", $output, $return_var);
             
-            foreach ($requiredResources as $resource => $description) {
-                if (stripos($content, $resource) !== false) {
-                    $foundResources++;
-                }
-            }
-            
-            $this->assertGreaterThanOrEqual(
-                2, 
-                $foundResources, 
-                "File '$file' harus memiliki minimal 2 resource yang diperlukan (CSS/JS/fonts)"
+            $this->assertEquals(
+                0, 
+                $return_var, 
+                "File '$file' memiliki syntax error PHP: " . implode("\n", $output)
             );
         }
     }
 
-    // Validator 5: Cek semua file memiliki konten yang cukup dan tidak kosong
-    public function test_all_files_have_sufficient_content()
+    // Validator 3: Cek struktur HTML dasar di semua file
+    public function test_all_files_have_basic_html_structure()
     {
+        foreach ($this->projectFiles as $file) {
+            $content = file_get_contents($file);
+            
+            // Cek tag HTML dasar
+            $this->assertStringContainsStringIgnoringCase(
+                '<!DOCTYPE html>', 
+                $content, 
+                "File '$file' harus memiliki DOCTYPE HTML"
+            );
+            
+            $this->assertStringContainsStringIgnoringCase(
+                '<html', 
+                $content, 
+                "File '$file' harus memiliki tag <html>"
+            );
+            
+            $this->assertStringContainsStringIgnoringCase(
+                '<head', 
+                $content, 
+                "File '$file' harus memiliki tag <head>"
+            );
+            
+            $this->assertStringContainsStringIgnoringCase(
+                '<body', 
+                $content, 
+                "File '$file' harus memiliki tag <body>"
+            );
+        }
+    }
+
+    // Validator 4: Cek penggunaan CSS dan JavaScript
+    public function test_all_files_have_css_and_javascript_references()
+    {
+        foreach ($this->projectFiles as $file) {
+            $content = file_get_contents($file);
+            
+            // Cek adanya CSS (inline atau external)
+            $hasCSS = preg_match('/<style[^>]*>|\.css|style\s*=/i', $content);
+            $this->assertTrue(
+                (bool)$hasCSS,
+                "File '$file' harus memiliki referensi CSS (tag <style>, file .css, atau atribut style)"
+            );
+            
+            // Cek adanya JavaScript (inline atau external)
+            $hasJS = preg_match('/<script[^>]*>|\.js|onclick\s*=|onload\s*=/i', $content);
+            $this->assertTrue(
+                (bool)$hasJS,
+                "File '$file' harus memiliki referensi JavaScript (tag <script>, file .js, atau event handler)"
+            );
+            
+            // Cek minimal ada 1 link atau meta tag
+            $hasLinks = preg_match('/<link[^>]*>|<meta[^>]*>|<a[^>]*href/i', $content);
+            $this->assertTrue(
+                (bool)$hasLinks,
+                "File '$file' harus memiliki minimal satu link, meta tag, atau anchor tag"
+            );
+        }
+    }
+
+    // Validator 5: Cek konten dan struktur konten yang bermakna
+    public function test_all_files_have_meaningful_content()
+    {
+        $minContentLength = 200; // Minimal 200 karakter
+        $minNonWhitespace = 80;  // Minimal 80 karakter non-whitespace
+        
         foreach ($this->projectFiles as $file) {
             $content = file_get_contents($file);
             $contentLength = strlen($content);
             
-            // Cek file tidak kosong
-            $this->assertGreaterThan(
-                100, 
+            // Cek panjang konten
+            $this->assertGreaterThanOrEqual(
+                $minContentLength, 
                 $contentLength, 
-                "File '$file' terlalu pendek ($contentLength karakter). Minimal 100 karakter."
+                "File '$file' terlalu pendek ($contentLength karakter). Minimal $minContentLength karakter."
             );
             
-            // Cek ada konten yang bermakna (bukan hanya whitespace)
+            // Cek konten non-whitespace
             $nonWhitespaceLength = strlen(preg_replace('/\s+/', '', $content));
-            $this->assertGreaterThan(
-                50,
+            $this->assertGreaterThanOrEqual(
+                $minNonWhitespace,
                 $nonWhitespaceLength,
-                "File '$file' memiliki terlalu sedikit konten non-whitespace ($nonWhitespaceLength karakter)"
+                "File '$file' memiliki terlalu sedikit konten non-whitespace ($nonWhitespaceLength karakter). Minimal $minNonWhitespace karakter."
             );
             
-            // Cek ada minimal satu tag HTML yang bermakna
-            $this->assertMatchesRegularExpression(
-                '/<(div|p|span|h[1-6]|a)[^>]*>/i',
-                $content,
-                "File '$file' harus memiliki minimal satu elemen HTML (div, p, span, heading, atau link)"
+            // Cek ada heading atau paragraf
+            $hasContentElements = preg_match('/<(h[1-6]|p|div|section|article)[^>]*>/i', $content);
+            $this->assertTrue(
+                (bool)$hasContentElements,
+                "File '$file' harus memiliki minimal satu elemen konten (heading, paragraf, div, section, atau article)"
+            );
+            
+            // Cek penutup tag yang benar
+            $this->assertStringContainsStringIgnoringCase(
+                '</body>', 
+                $content, 
+                "File '$file' harus memiliki tag penutup </body>"
+            );
+            
+            $this->assertStringContainsStringIgnoringCase(
+                '</html>', 
+                $content, 
+                "File '$file' harus memiliki tag penutup </html>"
             );
         }
     }
