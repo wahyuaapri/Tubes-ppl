@@ -239,6 +239,11 @@ $globalData = getCryptoData("/global");
                 display: none;
             }
         }
+        
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -271,23 +276,23 @@ $globalData = getCryptoData("/global");
             <p class="section-subtitle">Data harga real-time untuk 1000+ cryptocurrency. Diperbarui otomatis setiap 5 menit.</p>
             
             <!-- Market Stats Bar -->
-            <?php if ($globalData): ?>
+            <?php if ($globalData && isset($globalData['data'])): ?>
             <div class="market-stats-bar">
                 <div class="market-stat-item">
                     <div class="market-stat-label">Total Market Cap</div>
-                    <div class="market-stat-value">$<?php echo number_format($globalData['data']['total_market_cap']['usd'] / 1000000000, 2); ?>B</div>
+                    <div class="market-stat-value">$<?php echo isset($globalData['data']['total_market_cap']['usd']) ? number_format($globalData['data']['total_market_cap']['usd'] / 1000000000, 2) : '0.00'; ?>B</div>
                 </div>
                 <div class="market-stat-item">
                     <div class="market-stat-label">Volume 24h</div>
-                    <div class="market-stat-value">$<?php echo number_format($globalData['data']['total_volume']['usd'] / 1000000000, 2); ?>B</div>
+                    <div class="market-stat-value">$<?php echo isset($globalData['data']['total_volume']['usd']) ? number_format($globalData['data']['total_volume']['usd'] / 1000000000, 2) : '0.00'; ?>B</div>
                 </div>
                 <div class="market-stat-item">
                     <div class="market-stat-label">Dominasi BTC</div>
-                    <div class="market-stat-value"><?php echo number_format($globalData['data']['market_cap_percentage']['btc'], 1); ?>%</div>
+                    <div class="market-stat-value"><?php echo isset($globalData['data']['market_cap_percentage']['btc']) ? number_format($globalData['data']['market_cap_percentage']['btc'], 1) : '0.0'; ?>%</div>
                 </div>
                 <div class="market-stat-item">
                     <div class="market-stat-label">Kripto Aktif</div>
-                    <div class="market-stat-value"><?php echo number_format($globalData['data']['active_cryptocurrencies']); ?></div>
+                    <div class="market-stat-value"><?php echo isset($globalData['data']['active_cryptocurrencies']) ? number_format($globalData['data']['active_cryptocurrencies']) : '0'; ?></div>
                 </div>
             </div>
             <?php endif; ?>
@@ -332,31 +337,57 @@ $globalData = getCryptoData("/global");
                             <?php $rank = ($page - 1) * $per_page + 1; ?>
                             <?php foreach ($marketData as $crypto): ?>
                             <?php 
-                            $change1h = $crypto['price_change_percentage_1h_in_currency'];
-                            $change24h = $crypto['price_change_percentage_24h_in_currency'];
-                            $change7d = $crypto['price_change_percentage_7d_in_currency'];
+                            // Gunakan null coalescing operator untuk menghindari undefined array key warnings
+                            $change1h = $crypto['price_change_percentage_1h_in_currency'] ?? null;
+                            $change24h = $crypto['price_change_percentage_24h_in_currency'] ?? null;
+                            $change7d = $crypto['price_change_percentage_7d_in_currency'] ?? null;
+                            
+                            // Format angka jika tersedia
+                            $change1h_formatted = $change1h !== null ? ($change1h >= 0 ? '+' : '') . number_format($change1h, 2) . '%' : '<span class="no-data">N/A</span>';
+                            $change24h_formatted = $change24h !== null ? ($change24h >= 0 ? '+' : '') . number_format($change24h, 2) . '%' : '<span class="no-data">N/A</span>';
+                            $change7d_formatted = $change7d !== null ? ($change7d >= 0 ? '+' : '') . number_format($change7d, 2) . '%' : '<span class="no-data">N/A</span>';
+                            
+                            // Tentukan class untuk warna
+                            $change1h_class = $change1h !== null ? ($change1h >= 0 ? 'positive' : 'negative') : '';
+                            $change24h_class = $change24h !== null ? ($change24h >= 0 ? 'positive' : 'negative') : '';
+                            $change7d_class = $change7d !== null ? ($change7d >= 0 ? 'positive' : 'negative') : '';
+                            
+                            // Format harga dengan decimal places yang sesuai
+                            $current_price = $crypto['current_price'] ?? 0;
+                            $decimal_places = $current_price < 1 ? 6 : 2;
+                            $price_formatted = '$' . number_format($current_price, $decimal_places);
+                            
+                            // Format market cap dan volume
+                            $market_cap = isset($crypto['market_cap']) && $crypto['market_cap'] > 0 ? number_format($crypto['market_cap'] / 1000000, 2) : '0.00';
+                            $volume = isset($crypto['total_volume']) && $crypto['total_volume'] > 0 ? number_format($crypto['total_volume'] / 1000000, 2) : '0.00';
                             ?>
                             <tr>
                                 <td class="rank"><?php echo $rank; ?></td>
                                 <td class="crypto-name">
-                                    <img src="<?php echo $crypto['image']; ?>" alt="<?php echo $crypto['name']; ?>" class="crypto-icon">
+                                    <?php if (isset($crypto['image'])): ?>
+                                        <img src="<?php echo htmlspecialchars($crypto['image']); ?>" alt="<?php echo isset($crypto['name']) ? htmlspecialchars($crypto['name']) : 'Unknown'; ?>" class="crypto-icon">
+                                    <?php else: ?>
+                                        <div class="crypto-icon-placeholder">
+                                            <i class="fas fa-coins"></i>
+                                        </div>
+                                    <?php endif; ?>
                                     <div>
-                                        <div class="crypto-symbol"><?php echo strtoupper($crypto['symbol']); ?></div>
-                                        <div class="crypto-fullname"><?php echo $crypto['name']; ?></div>
+                                        <div class="crypto-symbol"><?php echo isset($crypto['symbol']) ? strtoupper(htmlspecialchars($crypto['symbol'])) : 'N/A'; ?></div>
+                                        <div class="crypto-fullname"><?php echo isset($crypto['name']) ? htmlspecialchars($crypto['name']) : 'Unknown Cryptocurrency'; ?></div>
                                     </div>
                                 </td>
-                                <td class="price">$<?php echo number_format($crypto['current_price'], $crypto['current_price'] < 1 ? 6 : 2); ?></td>
-                                <td class="change <?php echo ($change1h >= 0) ? 'positive' : 'negative'; ?>">
-                                    <?php echo ($change1h >= 0 ? '+' : '') . number_format($change1h, 2); ?>%
+                                <td class="price"><?php echo $price_formatted; ?></td>
+                                <td class="change <?php echo $change1h_class; ?>">
+                                    <?php echo $change1h_formatted; ?>
                                 </td>
-                                <td class="change <?php echo ($change24h >= 0) ? 'positive' : 'negative'; ?>">
-                                    <?php echo ($change24h >= 0 ? '+' : '') . number_format($change24h, 2); ?>%
+                                <td class="change <?php echo $change24h_class; ?>">
+                                    <?php echo $change24h_formatted; ?>
                                 </td>
-                                <td class="change <?php echo ($change7d >= 0) ? 'positive' : 'negative'; ?>">
-                                    <?php echo ($change7d >= 0 ? '+' : '') . number_format($change7d, 2); ?>%
+                                <td class="change <?php echo $change7d_class; ?>">
+                                    <?php echo $change7d_formatted; ?>
                                 </td>
-                                <td class="market-cap">$<?php echo number_format($crypto['market_cap'] / 1000000, 2); ?>M</td>
-                                <td class="volume">$<?php echo number_format($crypto['total_volume'] / 1000000, 2); ?>M</td>
+                                <td class="market-cap">$<?php echo $market_cap; ?>M</td>
+                                <td class="volume">$<?php echo $volume; ?>M</td>
                             </tr>
                             <?php $rank++; ?>
                             <?php endforeach; ?>
@@ -366,6 +397,9 @@ $globalData = getCryptoData("/global");
                                     <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: var(--text-muted); margin-bottom: 20px;"></i>
                                     <h3>Data tidak tersedia</h3>
                                     <p>Gagal mengambil data dari CoinGecko API. Coba refresh halaman.</p>
+                                    <?php if (isset($api_error)): ?>
+                                        <p class="error-message">Error: <?php echo htmlspecialchars($api_error); ?></p>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endif; ?>
@@ -375,7 +409,7 @@ $globalData = getCryptoData("/global");
                 <!-- Pagination -->
                 <div class="pagination">
                     <?php if ($page > 1): ?>
-                        <a href="market.php?order=<?php echo $order; ?>&page=<?php echo $page - 1; ?>" class="page-btn">
+                        <a href="market.php?order=<?php echo htmlspecialchars($order); ?>&page=<?php echo $page - 1; ?>" class="page-btn">
                             <i class="fas fa-chevron-left"></i> Prev
                         </a>
                     <?php else: ?>
@@ -390,7 +424,7 @@ $globalData = getCryptoData("/global");
                     $end_page = min($total_pages, $page + 2);
                     
                     if ($start_page > 1) {
-                        echo '<a href="market.php?order=' . $order . '&page=1" class="page-btn">1</a>';
+                        echo '<a href="market.php?order=' . htmlspecialchars($order) . '&page=1" class="page-btn">1</a>';
                         if ($start_page > 2) echo '<span class="page-btn disabled">...</span>';
                     }
                     
@@ -398,18 +432,18 @@ $globalData = getCryptoData("/global");
                         if ($i == $page) {
                             echo '<span class="page-btn active">' . $i . '</span>';
                         } else {
-                            echo '<a href="market.php?order=' . $order . '&page=' . $i . '" class="page-btn">' . $i . '</a>';
+                            echo '<a href="market.php?order=' . htmlspecialchars($order) . '&page=' . $i . '" class="page-btn">' . $i . '</a>';
                         }
                     }
                     
                     if ($end_page < $total_pages) {
                         if ($end_page < $total_pages - 1) echo '<span class="page-btn disabled">...</span>';
-                        echo '<a href="market.php?order=' . $order . '&page=' . $total_pages . '" class="page-btn">' . $total_pages . '</a>';
+                        echo '<a href="market.php?order=' . htmlspecialchars($order) . '&page=' . $total_pages . '" class="page-btn">' . $total_pages . '</a>';
                     }
                     ?>
                     
                     <?php if ($page < $total_pages): ?>
-                        <a href="market.php?order=<?php echo $order; ?>&page=<?php echo $page + 1; ?>" class="page-btn">
+                        <a href="market.php?order=<?php echo htmlspecialchars($order); ?>&page=<?php echo $page + 1; ?>" class="page-btn">
                             Next <i class="fas fa-chevron-right"></i>
                         </a>
                     <?php else: ?>
@@ -445,7 +479,7 @@ $globalData = getCryptoData("/global");
                 <div class="footer-links">
                     <a href="index.php"><i class="fas fa-home"></i> Home</a>
                     <a href="market.php"><i class="fas fa-chart-line"></i> Market</a>
-                    <a href="portfolio.php"><i class="fas fa-calculator"></i> Simulator</a>
+                    <a href="portofolio.php"><i class="fas fa-calculator"></i> Simulator</a>
                     <a href="about.php"><i class="fas fa-info-circle"></i> Tentang</a>
                 </div>
                 <div class="footer-copyright">
@@ -460,24 +494,32 @@ $globalData = getCryptoData("/global");
     <script src="script.js"></script>
     <script>
         // Search functionality
-        document.getElementById('searchInput').addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            const rows = document.querySelectorAll('#cryptoTable tbody tr');
-            
-            rows.forEach(row => {
-                const cryptoName = row.querySelector('.crypto-fullname').textContent.toLowerCase();
-                const cryptoSymbol = row.querySelector('.crypto-symbol').textContent.toLowerCase();
-                
-                if (cryptoName.includes(searchTerm) || cryptoSymbol.includes(searchTerm)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        });
-        
-        // Highlight row on hover
         document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    const rows = document.querySelectorAll('#cryptoTable tbody tr');
+                    
+                    rows.forEach(row => {
+                        const cryptoNameElement = row.querySelector('.crypto-fullname');
+                        const cryptoSymbolElement = row.querySelector('.crypto-symbol');
+                        
+                        if (cryptoNameElement && cryptoSymbolElement) {
+                            const cryptoName = cryptoNameElement.textContent.toLowerCase();
+                            const cryptoSymbol = cryptoSymbolElement.textContent.toLowerCase();
+                            
+                            if (cryptoName.includes(searchTerm) || cryptoSymbol.includes(searchTerm)) {
+                                row.style.display = '';
+                            } else {
+                                row.style.display = 'none';
+                            }
+                        }
+                    });
+                });
+            }
+            
+            // Highlight row on hover
             const rows = document.querySelectorAll('#cryptoTable tbody tr');
             
             rows.forEach(row => {
