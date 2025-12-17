@@ -85,7 +85,7 @@ if (!empty($portfolio)) {
                 'current_price' => $coin['current_price'],
                 'price_change_percentage_24h' => $coin['price_change_percentage_24h'],
                 'image' => $coin['image'],
-                'market_cap' => $coin['market_cap']
+                'market_cap' => isset($coin['market_cap']) ? $coin['market_cap'] : 0
             ];
         }
         

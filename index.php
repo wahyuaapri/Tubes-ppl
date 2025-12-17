@@ -128,35 +128,45 @@ $globalData = getCryptoData("/global");
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if ($previewData): ?>
-                            <?php $counter = 1; ?>
-                            <?php foreach ($previewData as $crypto): ?>
-                            <?php $change24h = $crypto['price_change_percentage_24h']; ?>
-                            <tr>
-                                <td class="rank"><?php echo $counter; ?></td>
-                                <td class="crypto-name">
-                                    <img src="<?php echo $crypto['image']; ?>" alt="<?php echo $crypto['name']; ?>" class="crypto-icon">
-                                    <div>
-                                        <div class="crypto-symbol"><?php echo strtoupper($crypto['symbol']); ?></div>
-                                        <div class="crypto-fullname"><?php echo $crypto['name']; ?></div>
-                                    </div>
-                                </td>
-                                <td class="price">$<?php echo number_format($crypto['current_price'], 2); ?></td>
-                                <td class="change <?php echo ($change24h >= 0) ? 'positive' : 'negative'; ?>">
-                                    <?php echo ($change24h >= 0 ? '+' : '') . number_format($change24h, 2); ?>%
-                                </td>
-                                <td class="market-cap">$<?php echo number_format($crypto['market_cap'] / 1000000, 2); ?>M</td>
-                            </tr>
-                            <?php $counter++; ?>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-                <div class="preview-action">
-                    <a href="market.php" class="btn-primary">Lihat Semua Crypto <i class="fas fa-arrow-right"></i></a>
-                </div>
+                    <?php if ($previewData): ?>
+    <?php $counter = 1; ?>
+    <?php foreach ($previewData as $crypto): ?>
+    <?php 
+        // GUNAKAN NULL COALESCING UNTUK SEMUA KEY
+        $change24h = $crypto['price_change_percentage_24h'] ?? 0;
+        $currentPrice = $crypto['current_price'] ?? 0;
+        $marketCap = $crypto['market_cap'] ?? 0;
+        $image = $crypto['image'] ?? 'https://via.placeholder.com/32';
+        $symbol = $crypto['symbol'] ?? 'UNKNOWN';
+        $name = $crypto['name'] ?? 'Unknown Cryptocurrency';
+    ?>
+    <tr>
+        <td class="rank"><?php echo $counter; ?></td>
+        <td class="crypto-name">
+            <img src="<?php echo htmlspecialchars($image); ?>" 
+                 alt="<?php echo htmlspecialchars($name); ?>" 
+                 class="crypto-icon">
+            <div>
+                <div class="crypto-symbol"><?php echo strtoupper($symbol); ?></div>
+                <div class="crypto-fullname"><?php echo htmlspecialchars($name); ?></div>
             </div>
-        </section>
+        </td>
+        <td class="price">$<?php echo number_format($currentPrice, 2); ?></td>
+        <td class="change <?php echo ($change24h >= 0) ? 'positive' : 'negative'; ?>">
+            <?php echo ($change24h >= 0 ? '+' : '') . number_format($change24h, 2); ?>%
+        </td>
+        <td class="market-cap">$<?php echo number_format($marketCap / 1000000, 2); ?>M</td>
+    </tr>
+    <?php $counter++; ?>
+    <?php endforeach; ?>
+<?php else: ?>
+    <!-- Tampilkan pesan jika data tidak ada -->
+    <tr>
+        <td colspan="5" style="text-align: center; padding: 20px;">
+            <i class="fas fa-exclamation-triangle"></i> Data tidak tersedia. Silakan coba lagi nanti.
+        </td>
+    </tr>
+<?php endif; ?>
     </main>
     
     <!-- Footer -->
