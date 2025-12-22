@@ -483,7 +483,7 @@ $globalData = getCryptoData("/global");
                     <a href="about.php"><i class="fas fa-info-circle"></i> Tentang</a>
                 </div>
                 <div class="footer-copyright">
-                    <p>&copy; <?php echo date('Y'); ?> Crypto Tracker. Data oleh CoinGecko API.</p>
+                    <p>&copy; <?php echo date('Y'); ?> Crypto Tracker. Data oleh DeniSetiawan.</p>
                     <p class="disclaimer">Informasi ini hanya untuk edukasi, bukan anjuran finansial.</p>
                 </div>
             </div>
